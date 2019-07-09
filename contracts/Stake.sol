@@ -35,8 +35,8 @@ struct userDataStruct {
 mapping(address => userDataStruct) public userDataMap;
 
 // events
-event deposit(address indexed user, uint256 amount);
-event withdraw(address indexed user, uint256 amount);
+event Deposit(address indexed user, uint256 amount);
+event Withdraw(address indexed user, uint256 amount);
 
 
 /**
@@ -76,7 +76,7 @@ function deposit(uint256 value, uint256 time) public{
  contribution = contribution.add(value);
 
  // emit event
- emit deposit(msg.sender, value);
+ emit Deposit(msg.sender, value);
 }
 
 
@@ -101,7 +101,7 @@ function withdraw() public{
  debt = debt.sub(amount);
  payout = payout.add(amount);
  // emit event
- emit withdraw(msg.sender, amount);
+ emit Withdraw(msg.sender, amount);
 }
 
 /**
@@ -138,7 +138,7 @@ function removeReserve() public onlyOwner{
  * @param percent                       uint number from 0 to 100
 */
 function calculateContributionWithInterest(uint256 amount, uint percent) public view returns(uint256){
- require(percent <= 100)
+ require(percent <= 100);
  return amount.add(amount.div(100).mul(percent));
 }
 
