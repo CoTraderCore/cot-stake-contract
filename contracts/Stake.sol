@@ -17,6 +17,7 @@ using SafeMath for uint256;
 uint256 public contribution = 0;
 uint256 public debt = 0;
 uint256 public payout = 0;
+uint256 public reserve = 0;
 
 ERC20 public token;
 
@@ -75,21 +76,18 @@ function withdraw() public{
 
 
 function AddReserve(value) public onlyOwner{
-require(transferFrom(msg.sender, value));
-reserve = reserve.add(value);
+ require(transferFrom(msg.sender, value));
+ reserve = reserve.add(value);
 }
 
-/*
-
-
-
-function RemoveReserve() onlyOwner{
-transfer(msg.sender, calculateFreeReserve())
+function calculateFreeReserve() public view return(uint256){
+ return reserve.sub(debt);
 }
 
-function calculateFreeReserve(){
+function RemoveReserve() public onlyOwner{
+ transfer(msg.sender, calculateFreeReserve())
+}
 
-} */
 
 
 function calculateContributionWithInterest(uint256 amount, uint percent) public view returns(uint256){
@@ -118,5 +116,4 @@ else if(time >= 1080 days){ // 3 year
 return calculateContributionWithInterest(amount, 100);
 }
 }
-
 }
