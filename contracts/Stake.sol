@@ -12,14 +12,19 @@ contract Stake is Ownable{
 
 using SafeMath for uint256;
 
-
+// total tokens deposit
 uint256 public contribution = 0;
+// total tokens debt
 uint256 public debt = 0;
+// total tokens payout
 uint256 public payout = 0;
+// total tokens reserve
 uint256 public reserve = 0;
 
+// COT token
 ERC20 public token;
 
+// user data
 struct userDataStruct {
   bool depositStatus;
   uint256 holdTime;
@@ -28,6 +33,11 @@ struct userDataStruct {
 }
 
 mapping(address => userDataStruct) public userDataMap;
+
+// events
+event deposit(address indexed user, uint256 amount);
+event withdraw(address indexed user, uint256 amount);
+
 
 /**
  * @dev constructor
@@ -64,6 +74,9 @@ function deposit(uint256 value, uint256 time) public{
  // update global data
  debt = increaseDebt;
  contribution = contribution.add(value);
+
+ // emit event
+ emit deposit(msg.sender, value);
 }
 
 
@@ -86,6 +99,9 @@ function withdraw() public{
  user.endTime = 0;
  // update global data
  debt = debt.sub(amount);
+ payout = payout.add(amount);
+ // emit event
+ emit withdraw(msg.sender, amount);
 }
 
 /**
