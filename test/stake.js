@@ -2,9 +2,9 @@ import { BN } from 'web3-utils';
 
 import ether from './helpers/ether';
 import EVMRevert from './helpers/EVMRevert';
-import { increaseTimeTo, duration } from './helpers/increaseTime';
+import { duration } from './helpers/duration';
 import latestTime from './helpers/latestTime';
-
+import advanceTime from './helpers/advanceTime';
 const BigNumber = BN;
 
 require('chai')
@@ -69,4 +69,26 @@ contract('Stake', function([_, wallet]) {
     });
   });
 
+
+  describe('Withdraw', function() {
+    const oneYear = 31556926;
+    it('User can not withdraw ahead of time', async function() {
+      await this.token.approve(this.stake.address, ether(100), {from: wallet});
+      await this.token.approve(this.stake.address, ether(400), {from: _});
+      await this.stake.addReserve(ether(400), {from: _});
+      await this.stake.deposit(ether(100), oneYear, {from: wallet}).should.be.fulfilled;
+      await this.stake.withdraw({from: wallet}).should.be.rejectedWith(EVMRevert);
+    });
+
+    it('User can withdraw after a certain time', async function() {
+      await this.token.approve(this.stake.address, ether(100), {from: wallet});
+      await this.token.approve(this.stake.address, ether(400), {from: _});
+      await this.stake.addReserve(ether(400), {from: _});
+      await this.stake.deposit(ether(100), oneYear, {from: wallet}).should.be.fulfilled;
+      const openingTime = latestTime() + duration.years(2);
+
+      await advanceTime(openingTime);
+      await this.stake.withdraw({from: wallet}).should.be.fulfilled;
+    });
+  });
 });

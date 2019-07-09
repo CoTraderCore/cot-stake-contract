@@ -86,6 +86,8 @@ function deposit(uint256 value, uint256 time) public{
 */
 function withdraw() public{
  userDataStruct storage user = userDataMap[msg.sender];
+ // throw if user not have depoit
+ require(user.depositStatus);
  // throw if the user call early
  require(now >= user.endTime);
  // calculate user amount + percent
