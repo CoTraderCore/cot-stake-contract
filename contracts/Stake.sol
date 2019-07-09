@@ -1,7 +1,5 @@
 /*
-Contract close tokens for stacke and return tokens + rewarding after certain time
-3,6,12,24,36 month
-3,8,20,50,100 percent
+This contract close tokens for stacke and return tokens + rewarding after certain time
 */
 
 pragma solidity ^0.4.24;
@@ -13,6 +11,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract Stake is Ownable{
 
 using SafeMath for uint256;
+
 
 uint256 public contribution = 0;
 uint256 public debt = 0;
@@ -30,10 +29,22 @@ struct userDataStruct {
 
 mapping(address => userDataStruct) public userDataMap;
 
+/**
+ * @dev constructor
+ *
+ * @param _token                        ERC20 token address
+*/
 constructor(address _token)public{
   token = ERC20(_token);
 }
 
+
+/**
+ * @dev send tokens to contract for stake
+ *
+ * @param value                        token amount for stake
+ * @param time                         unix time in seconds
+*/
 function deposit(uint256 value, uint256 time) public{
  userDataStruct storage user = userDataMap[msg.sender];
  // throw if user not close previous deposit
@@ -56,7 +67,10 @@ function deposit(uint256 value, uint256 time) public{
 }
 
 
-
+/**
+ * @dev withdraw token + earning percent after certain time
+ *
+*/
 function withdraw() public{
  userDataStruct storage user = userDataMap[msg.sender];
  // throw if the user call early
@@ -74,29 +88,54 @@ function withdraw() public{
  debt = debt.sub(amount);
 }
 
-
-function AddReserve(uint256 value) public onlyOwner{
+/**
+ * @dev owner can increase reserve
+ *
+ * @param value                        ERC20 token amount
+*/
+function addReserve(uint256 value) public onlyOwner{
  require(token.transferFrom(msg.sender, address(this), value));
  reserve = reserve.add(value);
 }
 
+/**
+ * @dev calculate reserve wich not used
+ *
+*/
 function calculateFreeReserve() public view returns(uint256){
  return reserve.sub(debt);
 }
 
-function RemoveReserve() public onlyOwner{
+/**
+ * @dev owner can withdraw not used reserve
+ *
+*/
+function removeReserve() public onlyOwner{
  token.transfer(msg.sender, calculateFreeReserve());
 }
 
 
-
+/**
+ * @dev calculate tokens amount + earning percent
+ *
+ * @param amount                        ERC20 token amount
+ * @param percent                       uint number from 0 to 100
+*/
 function calculateContributionWithInterest(uint256 amount, uint percent) public view returns(uint256){
+ require(percent <= 100)
  return amount.add(amount.div(100).mul(percent));
 }
 
-//3,6,12,24,36 month
-//3,8,20,50,100 percent
 
+
+/**
+ * @dev calculate earning by time
+ * 3,6,12,24,36 month
+ * 3,8,20,50,100 percent
+ *
+ * @param amount                        ERC20 token amount
+ * @param time                          time in seconds
+*/
 function calculateWithdarw(uint256 amount, uint256 time) public view returns(uint256){
  if(time < 90 days){
  return 0;
