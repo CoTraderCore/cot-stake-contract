@@ -12,35 +12,53 @@ uint256 public contribution = 0;
 uint256 public debt = 0;
 uint256 public payout = 0;
 
-mapping (address => uint256) public userTime;
-mapping (address => uint256) public userAmount;
-mapping (address => bool) public userStatus;
+ERC20 token;
+
+struct userDataStruct {
+  bool status;
+  uint256 holdTime;
+  uint256 endTime;
+  uint256 amount;
+}
+
+mapping(address => userDataStruct) public userDataMap;
+
+constructor(address _token)public{
+  COT = ERC20(_token)
+}
 
 function deposit(uint256 value, uint256 time) public{
+ userDataStruct storage user = userDataMap[msg.sender];
  // throw if user not close previous deposit
- require(!userStatus[msg.sender]);
+ require(!user.status);
 
  uint256 increaseDebt = debt.add(calculateWithdarw(value, time));
  // throw if the contract cannot pay for user value
  require(increaseDebt <= limit);
  // throw if user not approve tokens
  require(transferFrom(msg.sender, value));
- // upadte user data
- userTime[msg.sender] = now + time;
- userAmount[msg.sender] = value;
- userStatus[msg.sender] = true;
+ // update user data
+ user.holdTime = time;
+ user.endTime = now + time;
+ user.amount = value;
+
  // update global data
  debt = increaseDebt;
  contribution = contribution.add(value);
 }
 
-/* function Withdraw(){
-reguire(now >= userTime[msg.sender])
-amount = CalculatePercent()
-debt = debt - amount
-userStatus[msg.sender] = false
-userAmount[msg.sender] = 0
+function Withdraw(){
+ userDataStruct storage user = userDataMap[msg.sender];
+ reguire(now >= user.endTime)
+ // require(token.transfer())
+ // update user data
+ userStatus[msg.sender] = false
+ userAmount[msg.sender] = 0
+ // update global data
+ debt = debt.sub(amount)
 }
+
+/*
 
 function AddReserve(value) onlyOwner{
 require(transferFrom(msg.sender, value))
