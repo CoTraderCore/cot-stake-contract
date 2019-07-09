@@ -1,5 +1,5 @@
 /*
-This contract close tokens for stacke and return tokens + rewarding after certain time
+This contract close tokens for stake and return tokens + rewarding after certain time
 */
 
 pragma solidity ^0.4.24;
