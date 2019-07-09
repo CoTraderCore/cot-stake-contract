@@ -6,16 +6,22 @@ Contract close tokens for stacke and return tokens + rewarding after certain tim
 
 pragma solidity ^0.5.10;
 
-contract Stake {
+import "./zeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+
+contract Stake is Ownable{
+
+using SafeMath for uint256;
 
 uint256 public contribution = 0;
 uint256 public debt = 0;
 uint256 public payout = 0;
 
-ERC20 token;
+ERC20 public token;
 
 struct userDataStruct {
-  bool status;
+  bool depositStatus;
   uint256 holdTime;
   uint256 endTime;
   uint256 amount;
@@ -24,20 +30,21 @@ struct userDataStruct {
 mapping(address => userDataStruct) public userDataMap;
 
 constructor(address _token)public{
-  COT = ERC20(_token)
+  token = ERC20(_token);
 }
 
 function deposit(uint256 value, uint256 time) public{
  userDataStruct storage user = userDataMap[msg.sender];
  // throw if user not close previous deposit
- require(!user.status);
+ require(!user.depositStatus);
 
  uint256 increaseDebt = debt.add(calculateWithdarw(value, time));
  // throw if the contract cannot pay for user value
  require(increaseDebt <= limit);
- // throw if user not approve tokens
+ // throw if user not approve tokens for contract
  require(transferFrom(msg.sender, value));
  // update user data
+ user.depositStatus = true;
  user.holdTime = time;
  user.endTime = now + time;
  user.amount = value;
@@ -47,23 +54,34 @@ function deposit(uint256 value, uint256 time) public{
  contribution = contribution.add(value);
 }
 
-function Withdraw(){
+
+
+function withdraw() public{
  userDataStruct storage user = userDataMap[msg.sender];
- reguire(now >= user.endTime)
- // require(token.transfer())
+ // throw if the user call early
+ require(now >= user.endTime);
+ // calculate user amount + percent
+ uint256 amount = calculateWithdarw(user.amount, user.holdTime);
+ // transfer tokens to user
+ require(token.transfer(msg.sender, ));
  // update user data
- userStatus[msg.sender] = false
- userAmount[msg.sender] = 0
+ user.depositStatus = false;
+ user.amount = 0;
+ user.holdTime = 0;
+ user.endTime = 0;
  // update global data
- debt = debt.sub(amount)
+ debt = debt.sub(amount);
+}
+
+
+function AddReserve(value) public onlyOwner{
+require(transferFrom(msg.sender, value));
+reserve = reserve.add(value);
 }
 
 /*
 
-function AddReserve(value) onlyOwner{
-require(transferFrom(msg.sender, value))
-reserve += value
-}
+
 
 function RemoveReserve() onlyOwner{
 transfer(msg.sender, calculateFreeReserve())
