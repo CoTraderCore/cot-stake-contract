@@ -1,1 +1,1 @@
-# cot-stake-contract
+# NOT FINISHED 
