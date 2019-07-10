@@ -62,6 +62,16 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.stake.deposit(ether(100), duration.years(1), {from: userOne}).should.be.rejectedWith(EVMRevert);
     });
 
+    it('User can do next deposit after withdarw previous', async function() {
+      await this.token.approve(this.stake.address, ether(200), {from: userOne});
+      await this.token.approve(this.stake.address, ether(400), {from: _});
+      await this.stake.addReserve(ether(400), {from: _});
+      await this.stake.deposit(ether(100), duration.years(1), {from: userOne}).should.be.fulfilled;
+      await advanceTimeAndBlock(duration.years(1));
+      await this.stake.withdraw({from: userOne}).should.be.fulfilled;
+      await this.stake.deposit(ether(100), duration.years(1), {from: userOne}).should.be.fulfilled;
+    });
+
     it('User can not do deposit if his value more than reserve', async function() {
       await this.token.approve(this.stake.address, ether(500), {from: userOne});
       await this.token.approve(this.stake.address, ether(400), {from: _});
@@ -157,6 +167,19 @@ contract('Stake', function([_, userOne, userTwo]) {
       // Correct percent 3 yaers = 100%
       const balanceFromWei = fromWei(String(balanceAfter));
       Number(balanceFromWei).should.be.equal(20);
+    });
+
+    it('If the user withdraws much later, his balance is not more than the original', async function() {
+      await this.token.approve(this.stake.address, ether(10), {from: userTwo});
+      await this.token.approve(this.stake.address, ether(20), {from: _});
+      await this.stake.addReserve(ether(20), {from: _});
+      await this.stake.deposit(ether(10), duration.years(2), {from: userTwo}).should.be.fulfilled;
+      await advanceTimeAndBlock(duration.years(5));
+      await this.stake.withdraw({from: userTwo}).should.be.fulfilled;
+      const balance = await this.token.balanceOf(userTwo);
+      // Correct percent 2 yaers = 50%
+      const balanceFromWei = fromWei(String(balance));
+      Number(balanceFromWei).should.be.equal(15);
     });
   });
 });
