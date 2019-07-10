@@ -164,10 +164,10 @@ function calculateWithdarw(uint256 amount, uint256 time) public view returns(uin
  else if(time >= 180 days && time < 1 years){ // 6 month = 8%
   return calculateContributionWithInterest(amount, 8);
  }
- else if(time >= 360 days && time < 2 years){ // 1 year = 20%
+ else if(time >= 1 years && time < 2 years){ // 1 year = 20%
   return calculateContributionWithInterest(amount, 20);
  }
- else if(time >= 720 days && time < 3 years){ // 2 year = 50%
+ else if(time >= 2 years && time < 3 years){ // 2 year = 50%
   return calculateContributionWithInterest(amount, 50);
  }
  else if(time >= 3 years){ // 3 year = 100%
