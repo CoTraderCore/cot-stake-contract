@@ -129,7 +129,9 @@ function calculateFreeReserve() public view returns(uint256){
  *
 */
 function removeReserve() public onlyOwner{
- token.transfer(msg.sender, calculateFreeReserve());
+ uint256 _reserve = calculateFreeReserve();
+ require(_reserve > 0);
+ token.transfer(msg.sender, reserve);
 }
 
 
@@ -139,7 +141,7 @@ function removeReserve() public onlyOwner{
  * @param amount                        ERC20 token amount
  * @param percent                       uint number from 0 to 100
 */
-function calculateContributionWithInterest(uint256 amount, uint percent) public view returns(uint256){
+function calculateContributionWithInterest(uint256 amount, uint percent) public pure returns(uint256){
  require(percent <= 100);
  return amount.add(amount.div(100).mul(percent));
 }
@@ -154,23 +156,23 @@ function calculateContributionWithInterest(uint256 amount, uint percent) public 
  * @param amount                        ERC20 token amount
  * @param time                          time in seconds
 */
-function calculateWithdarw(uint256 amount, uint256 time) public view returns(uint256){
+function calculateWithdarw(uint256 amount, uint256 time) public pure returns(uint256){
  if(time < 90 days){
  return 0;
  }
  else if(time >= 90 days && time < 180 days){ // 3 month = 3%
   return calculateContributionWithInterest(amount, 3);
  }
- else if(time >= 180 days && time < 1 years){ // 6 month = 8%
+ else if(time >= 180 days && time < 365 days){ // 6 month = 8%
   return calculateContributionWithInterest(amount, 8);
  }
- else if(time >= 1 years && time < 2 years){ // 1 year = 20%
+ else if(time >= 365 days && time < 730 days){ // 1 year = 20%
   return calculateContributionWithInterest(amount, 20);
  }
- else if(time >= 2 years && time < 3 years){ // 2 year = 50%
+ else if(time >= 730 days && time < 1095 days){ // 2 year = 50%
   return calculateContributionWithInterest(amount, 50);
  }
- else if(time >= 3 years){ // 3 year = 100%
+ else if(time >= 1095 days){ // 3 year = 100%
   return calculateContributionWithInterest(amount, 100);
  }
 }

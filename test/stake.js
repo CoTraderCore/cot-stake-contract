@@ -70,6 +70,70 @@ contract('Stake', function([_, userOne, userTwo]) {
     });
   });
 
+  describe('Calculate withdraw percent', function() {
+    it('less than 3 month (90 days) should return 0%', async function() {
+      let percent = await this.stake.calculateWithdarw(100, duration.days(89));
+      Number(percent).should.be.equal(0);
+    });
+
+    it('3 month (90 days) should return 3%', async function() {
+      let percent = await this.stake.calculateWithdarw(100, duration.days(90));
+      percent -= 100;
+      percent.should.be.equal(3);
+    });
+
+    it('6 month (180 days) should return 8%', async function() {
+      let percent = await this.stake.calculateWithdarw(100, duration.days(190));
+      percent -= 100;
+      percent.should.be.equal(8);
+    });
+
+    it('1 year should return 20%', async function() {
+      let percent = await this.stake.calculateWithdarw(100, duration.years(1));
+      percent -= 100;
+      percent.should.be.equal(20);
+    });
+
+    it('2 years should return 50%', async function() {
+      let percent = await this.stake.calculateWithdarw(100, duration.years(2));
+      percent -= 100;
+      percent.should.be.equal(50);
+    });
+
+    it('3 years should return 100%', async function() {
+      let percent = await this.stake.calculateWithdarw(100, duration.years(3));
+      percent -= 100;
+      percent.should.be.equal(100);
+    });
+
+    it('More than 3 years should return 100%', async function() {
+      let percent = await this.stake.calculateWithdarw(100, duration.years(5));
+      percent -= 100;
+      percent.should.be.equal(100);
+    });
+  });
+
+  describe('Reserve', function() {
+    it('Owner can get back not used reserve', async function() {
+      await this.token.approve(this.stake.address, ether(100), {from: userOne});
+      await this.token.approve(this.stake.address, ether(200), {from: _});
+      await this.stake.addReserve(ether(200), {from: _});
+      const balanceBefore = await this.token.balanceOf(_);
+      await this.stake.deposit(ether(100), duration.years(1), {from: userOne}).should.be.fulfilled;
+      await this.stake.removeReserve({from: _}).should.be.fulfilled;
+      const balanceAfter = await this.token.balanceOf(_);
+      assert.isTrue(balanceAfter > balanceBefore);
+    });
+
+    it('Owner can NOT get back reserve if all reserve in debt', async function() {
+      await this.token.approve(this.stake.address, ether(100), {from: userOne});
+      await this.token.approve(this.stake.address, ether(200), {from: _});
+      await this.stake.addReserve(ether(200), {from: _});
+      // 3 years = 100%
+      await this.stake.deposit(ether(100), duration.years(3), {from: userOne}).should.be.fulfilled;
+      await this.stake.removeReserve({from: _}).should.be.rejectedWith(EVMRevert);
+    });
+  });
 
   describe('Withdraw', function() {
     it('User can not withdraw ahead of time', async function() {
@@ -94,7 +158,5 @@ contract('Stake', function([_, userOne, userTwo]) {
       const balanceFromWei = fromWei(String(balanceAfter));
       Number(balanceFromWei).should.be.equal(20);
     });
-
-
   });
 });
