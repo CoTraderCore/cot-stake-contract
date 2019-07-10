@@ -169,7 +169,7 @@ contract('Stake', function([_, userOne, userTwo]) {
       Number(balanceFromWei).should.be.equal(20);
     });
 
-    it('If the user withdraws much later, his balance is not more than the original', async function() {
+    it('If the user withdraws much later, his reward is no more than the original one, which he set', async function() {
       await this.token.approve(this.stake.address, ether(10), {from: userTwo});
       await this.token.approve(this.stake.address, ether(20), {from: _});
       await this.stake.addReserve(ether(20), {from: _});
