@@ -135,6 +135,17 @@ contract('Stake', function([_, userOne, userTwo]) {
       assert.isTrue(balanceAfter > balanceBefore);
     });
 
+    it('NOT Owner can NOT get back not used reserve', async function() {
+      await this.token.approve(this.stake.address, ether(200), {from: _});
+      await this.stake.addReserve(ether(200), {from: _});
+      await this.stake.removeReserve({from: userOne}).should.be.rejectedWith(EVMRevert);
+    });
+
+    it('NOT Owner can NOT add new reserve', async function() {
+      await this.token.approve(this.stake.address, ether(200), {from: userOne});
+      await this.stake.addReserve(ether(200), {from: userOne}).should.be.rejectedWith(EVMRevert);
+    });
+
     it('Owner can NOT get back reserve if all reserve in debt', async function() {
       await this.token.approve(this.stake.address, ether(100), {from: userOne});
       await this.token.approve(this.stake.address, ether(200), {from: _});
