@@ -65,16 +65,15 @@ function deposit(uint256 value, uint256 time) public{
  require(increaseDebt <= reserve);
  // throw if user not approve tokens for contract
  require(token.transferFrom(msg.sender, address(this), value));
+ // update global data
+ debt = increaseDebt;
+ contribution = contribution.add(value);
+
  // update user data
  user.depositStatus = true;
  user.holdTime = time;
  user.endTime = now + time;
  user.amount = value;
-
- // update global data
- debt = increaseDebt;
- contribution = contribution.add(value);
-
  // emit event
  emit Deposit(msg.sender, value);
 }
@@ -91,19 +90,23 @@ function withdraw() public{
  // throw if the user call early
  require(now >= user.endTime);
  // calculate user amount + percent
- uint256 amount = calculateWithdarw(user.amount, user.holdTime);
+ uint256 payAmount = calculateWithdarw(user.amount, user.holdTime);
  // transfer tokens to user
- require(token.transfer(msg.sender, amount));
+ require(token.transfer(msg.sender, payAmount));
+
+ // update global data
+ debt = debt.sub(payAmount);
+ payout = payout.add(payAmount);
+ reserve = reserve.sub(payAmount);
+ contribution = contribution.sub(user.amount);
+
  // update user data
  user.depositStatus = false;
  user.amount = 0;
  user.holdTime = 0;
  user.endTime = 0;
- // update global data
- debt = debt.sub(amount);
- payout = payout.add(amount);
  // emit event
- emit Withdraw(msg.sender, amount);
+ emit Withdraw(msg.sender, payAmount);
 }
 
 /**
@@ -129,9 +132,10 @@ function calculateFreeReserve() public view returns(uint256){
  *
 */
 function removeReserve() public onlyOwner{
- uint256 _reserve = calculateFreeReserve();
- require(_reserve > 0);
- token.transfer(msg.sender, reserve);
+ uint256 freeReserve = calculateFreeReserve();
+ require(freeReserve > 0);
+ token.transfer(msg.sender, freeReserve);
+ reserve = reserve.sub(freeReserve);
 }
 
 
