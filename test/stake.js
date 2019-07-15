@@ -148,7 +148,21 @@ contract('Stake', function([_, userOne, userTwo]) {
     })
   })
 
-  describe('Reserve', function() {
+  describe('Add reserve', function() {
+    it('NOT Owner can NOT add new reserve', async function() {
+      await this.token.approve(this.stake.address, ether(200), {from: userOne})
+      await this.stake.addReserve(ether(200), {from: userOne}).should.be.rejectedWith(EVMRevert)
+    })
+
+    it('Owner can add new reserve and reserve data was update correctly', async function() {
+      await this.token.approve(this.stake.address, ether(200), {from: _})
+      await this.stake.addReserve(ether(200), {from: _}).should.be.fulfilled
+      const reserve = await this.stake.reserve()
+      assert.equal(fromWei(String(reserve)), 200)
+    })
+  })
+
+  describe('Remove reserve', function() {
     it('Owner can get back not used reserve', async function() {
       await this.token.approve(this.stake.address, ether(100), {from: userOne})
       await this.token.approve(this.stake.address, ether(200), {from: _})
@@ -166,12 +180,7 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.stake.removeReserve({from: userOne}).should.be.rejectedWith(EVMRevert)
     })
 
-    it('NOT Owner can NOT add new reserve', async function() {
-      await this.token.approve(this.stake.address, ether(200), {from: userOne})
-      await this.stake.addReserve(ether(200), {from: userOne}).should.be.rejectedWith(EVMRevert)
-    })
-
-    it('Owner can get back correct amount of reserve', async function() {
+    it('Owner can get back correct amount of reserve and reserve data was correct update', async function() {
       await this.token.approve(this.stake.address, ether(100), {from: userOne})
       await this.token.approve(this.stake.address, ether(400), {from: _})
       await this.stake.addReserve(ether(400), {from: _})
