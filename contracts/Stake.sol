@@ -20,7 +20,7 @@ uint256 public debt = 0;
 uint256 public payout = 0;
 // total tokens reserve
 uint256 public reserve = 0;
-// minimum require time for staking 
+// minimum require time for staking
 uint256 public minRequireTime = 90 days;
 
 // COT token
@@ -72,6 +72,7 @@ function deposit(uint256 value, uint256 time) public{
  // update global data
  debt = increaseDebt;
  contribution = contribution.add(value);
+ reserve = reserve.add(value);
 
  // update user data
  user.depositStatus = true;

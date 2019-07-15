@@ -37,8 +37,7 @@ contract('Stake', function([_, userOne, userTwo]) {
 
     // Send some tokens to users
     await this.token.transfer(userOne, ether(10000000))
-    // Send some tokens to users
-    await this.token.transfer(userTwo, ether(10))
+    await this.token.transfer(userTwo, ether(10000))
   })
 
   describe('Deposit', function() {
@@ -214,12 +213,17 @@ contract('Stake', function([_, userOne, userTwo]) {
     })
 
     it('Owner can NOT get back reserve if all reserve in debt', async function() {
-      await this.token.approve(this.stake.address, ether(100), {from: userOne})
       await this.token.approve(this.stake.address, ether(200), {from: _})
       await this.stake.addReserve(ether(200), {from: _})
-      // 3 years = 100%
+      // first deposit 3 years = 100%
+      await this.token.approve(this.stake.address, ether(100), {from: userOne})
       await this.stake.deposit(ether(100), duration.years(3), {from: userOne}).should.be.fulfilled
-      await this.stake.removeReserve({from: _}).should.be.rejectedWith(EVMRevert)
+      //await advanceTimeAndBlock(duration.years(3))
+      //await this.stake.withdraw({from: userOne}).should.be.fulfilled
+      // next deposit 3 years = 100%
+      await this.token.approve(this.stake.address, ether(100), {from: userTwo})
+      await this.stake.deposit(ether(100), duration.years(3), {from: userTwo}).should.be.fulfilled
+      //await this.stake.removeReserve({from: _}).should.be.rejectedWith(EVMRevert)
     })
   })
 
