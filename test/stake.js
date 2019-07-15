@@ -42,7 +42,7 @@ contract('Stake', function([_, userOne, userTwo]) {
   })
 
   describe('Deposit', function() {
-    it('User can not do deposit if owner not add reserve', async function() {
+    it('User can NOT do deposit if owner NOT add reserve', async function() {
       await this.token.approve(this.stake.address, ether(100))
       await this.stake.deposit(ether(100), duration.years(1)).should.be.rejectedWith(EVMRevert)
     })
@@ -54,14 +54,14 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.stake.deposit(ether(100), duration.years(1), {from: userOne}).should.be.fulfilled
     })
 
-    it('User can not do deposit with time less than require time', async function() {
+    it('User can NOT do deposit with time less than require time', async function() {
       await this.token.approve(this.stake.address, ether(100), {from: userOne})
       await this.token.approve(this.stake.address, ether(200), {from: _})
       await this.stake.addReserve(ether(200), {from: _})
       await this.stake.deposit(ether(100), duration.days(89), {from: userOne}).should.be.rejectedWith(EVMRevert)
     })
 
-    it('User can not do double deposit', async function() {
+    it('User can NOT do double deposit', async function() {
       await this.token.approve(this.stake.address, ether(200), {from: userOne})
       await this.token.approve(this.stake.address, ether(400), {from: _})
       await this.stake.addReserve(ether(400), {from: _})
@@ -79,11 +79,18 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.stake.deposit(ether(100), duration.years(1), {from: userOne}).should.be.fulfilled
     })
 
-    it('User can not do deposit if his value more than reserve', async function() {
+    it('User can NOT do deposit if his value more than reserve', async function() {
       await this.token.approve(this.stake.address, ether(500), {from: userOne})
       await this.token.approve(this.stake.address, ether(400), {from: _})
       await this.stake.addReserve(ether(400), {from: _})
       await this.stake.deposit(ether(500), duration.years(1), {from: userOne}).should.be.rejectedWith(EVMRevert)
+    })
+
+    it('User can do deposit if his value equal to reserve', async function() {
+      await this.token.approve(this.stake.address, ether(200), {from: userOne})
+      await this.token.approve(this.stake.address, ether(400), {from: _})
+      await this.stake.addReserve(ether(400), {from: _})
+      await this.stake.deposit(ether(200), duration.years(3), {from: userOne}).should.be.fulfilled
     })
 
     it('Correct data update after deposit', async function() {
@@ -161,7 +168,15 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.stake.addReserve(ether(200), {from: userOne}).should.be.rejectedWith(EVMRevert)
     })
 
-    it('Owner can add new reserve and reserve data was update correctly', async function() {
+    it('Balance of contract increase when owner add reserve', async function() {
+      const balanceBefore = await this.token.balanceOf(this.stake.address)
+      await this.token.approve(this.stake.address, ether(200), {from: _})
+      await this.stake.addReserve(ether(200), {from: _}).should.be.fulfilled
+      const balanceAfter = await this.token.balanceOf(this.stake.address)
+      assert.isTrue(balanceAfter > balanceBefore)
+    })
+
+    it('Reserve data was update correctly after owner addReserve', async function() {
       await this.token.approve(this.stake.address, ether(200), {from: _})
       await this.stake.addReserve(ether(200), {from: _}).should.be.fulfilled
       const reserve = await this.stake.reserve()
@@ -170,7 +185,7 @@ contract('Stake', function([_, userOne, userTwo]) {
   })
 
   describe('Remove reserve', function() {
-    it('Owner can get back not used reserve', async function() {
+    it('Owner can get back NOT used reserve', async function() {
       await this.token.approve(this.stake.address, ether(100), {from: userOne})
       await this.token.approve(this.stake.address, ether(200), {from: _})
       await this.stake.addReserve(ether(200), {from: _})
@@ -181,7 +196,7 @@ contract('Stake', function([_, userOne, userTwo]) {
       assert.isTrue(balanceAfter > balanceBefore)
     })
 
-    it('NOT Owner can NOT get back not used reserve', async function() {
+    it('NOT Owner can NOT get back NOT used reserve', async function() {
       await this.token.approve(this.stake.address, ether(200), {from: _})
       await this.stake.addReserve(ether(200), {from: _})
       await this.stake.removeReserve({from: userOne}).should.be.rejectedWith(EVMRevert)
@@ -209,7 +224,7 @@ contract('Stake', function([_, userOne, userTwo]) {
   })
 
   describe('Withdraw', function() {
-    it('User can not withdraw ahead of time', async function() {
+    it('User can NOT withdraw ahead of time', async function() {
       await this.token.approve(this.stake.address, ether(100), {from: userOne})
       await this.token.approve(this.stake.address, ether(400), {from: _})
       await this.stake.addReserve(ether(400), {from: _})
