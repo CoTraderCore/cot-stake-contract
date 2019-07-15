@@ -64,15 +64,18 @@ function deposit(uint256 value, uint256 time) public{
  // throw if user time does not match the minimum time
  require(time >= minRequireTime);
 
+ // calculate new debt and reserve with new value 
  uint256 increaseDebt = debt.add(calculateWithdarw(value, time));
- // throw if the contract cannot pay for user value
- require(increaseDebt <= reserve);
+ uint256 increaseReserve = reserve.add(value);
+
+ // throw if new debt more than new reserve
+ require(increaseDebt <= increaseReserve);
  // throw if user not approve tokens for contract
  require(token.transferFrom(msg.sender, address(this), value));
  // update global data
  debt = increaseDebt;
  contribution = contribution.add(value);
- reserve = reserve.add(value);
+ reserve = increaseReserve;
 
  // update user data
  user.depositStatus = true;

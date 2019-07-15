@@ -68,7 +68,7 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.stake.deposit(ether(100), duration.years(1), {from: userOne}).should.be.rejectedWith(EVMRevert)
     })
 
-    it('User can do next deposit after withdarw previous', async function() {
+    it('User can do next deposit after withdraw previous', async function() {
       await this.token.approve(this.stake.address, ether(200), {from: userOne})
       await this.token.approve(this.stake.address, ether(400), {from: _})
       await this.stake.addReserve(ether(400), {from: _})
@@ -82,7 +82,7 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.token.approve(this.stake.address, ether(500), {from: userOne})
       await this.token.approve(this.stake.address, ether(400), {from: _})
       await this.stake.addReserve(ether(400), {from: _})
-      await this.stake.deposit(ether(500), duration.years(1), {from: userOne}).should.be.rejectedWith(EVMRevert)
+      await this.stake.deposit(ether(500), duration.years(3), {from: userOne}).should.be.rejectedWith(EVMRevert)
     })
 
     it('User can do deposit if his value equal to reserve', async function() {
@@ -209,6 +209,7 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.stake.deposit(ether(100), duration.years(3), {from: userOne}).should.be.fulfilled
       await this.stake.removeReserve({from: _}).should.be.fulfilled
       const reserve = await this.stake.reserve()
+      // owner can remove 300 tokens and 200 stay in reserve
       assert.equal(fromWei(String(reserve)), 200)
     })
 
@@ -221,6 +222,10 @@ contract('Stake', function([_, userOne, userTwo]) {
       //await advanceTimeAndBlock(duration.years(3))
       //await this.stake.withdraw({from: userOne}).should.be.fulfilled
       // next deposit 3 years = 100%
+      const reserve = await this.stake.reserve()
+      //assert.equal(fromWei(String(reserve)), 150)
+      const debt = await this.stake.debt()
+      //assert.equal(fromWei(String(debt)), 1510)
       await this.token.approve(this.stake.address, ether(100), {from: userTwo})
       await this.stake.deposit(ether(100), duration.years(3), {from: userTwo}).should.be.fulfilled
       //await this.stake.removeReserve({from: _}).should.be.rejectedWith(EVMRevert)
@@ -246,24 +251,27 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.stake.withdraw({from: userTwo}).should.be.fulfilled
       const balanceAfter = await this.token.balanceOf(userTwo)
       assert.isTrue(balanceAfter > balanceBefore)
-      // Correct percent 3 yaers = 100%
-      const balanceFromWei = fromWei(String(balanceAfter))
-      Number(balanceFromWei).should.be.equal(20)
+      // Correct percent 3 years = 100%
+      // earn 10 tokens for 10 tokens deposit
+      const earn = Number(fromWei(String(balanceAfter))) - Number(fromWei(String(balanceBefore)))
+      Number(earn).should.be.equal(10)
     })
 
     it('If the user withdraws much later, his reward is no more than the original one, which he set', async function() {
+      const balanceBefore = await this.token.balanceOf(userTwo)
       await this.token.approve(this.stake.address, ether(10), {from: userTwo})
       await this.token.approve(this.stake.address, ether(20), {from: _})
       await this.stake.addReserve(ether(20), {from: _})
       await this.stake.deposit(ether(10), duration.years(2), {from: userTwo}).should.be.fulfilled
       await advanceTimeAndBlock(duration.years(5))
       await this.stake.withdraw({from: userTwo}).should.be.fulfilled
-      const balance = await this.token.balanceOf(userTwo)
-      // Correct percent 2 yaers = 50%
-      const balanceFromWei = fromWei(String(balance))
-      Number(balanceFromWei).should.be.equal(15)
+      const balanceAfter = await this.token.balanceOf(userTwo)
+      // Correct percent 2 years = 50%
+      const earn = Number(fromWei(String(balanceAfter))) - Number(fromWei(String(balanceBefore)))
+      earn.should.be.equal(5)
     })
 
+    // ??? Need more test
     it('Correct data update after withdraw', async function() {
       await this.token.approve(this.stake.address, ether(100), {from: userOne})
       await this.token.approve(this.stake.address, ether(200), {from: _})
@@ -279,7 +287,7 @@ contract('Stake', function([_, userOne, userTwo]) {
       const user = await this.stake.userDataMap(userOne)
 
       // global data
-      assert.equal(fromWei(String(reserve)), 0)
+      assert.equal(fromWei(String(reserve)), 100)
       assert.equal(fromWei(String(contribution)), 0)
       assert.equal(fromWei(String(payout)), 200)
       assert.equal(fromWei(String(debt)), 0)
