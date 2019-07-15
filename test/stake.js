@@ -54,6 +54,13 @@ contract('Stake', function([_, userOne, userTwo]) {
       await this.stake.deposit(ether(100), duration.years(1), {from: userOne}).should.be.fulfilled
     })
 
+    it('User can not do deposit with time less than require time', async function() {
+      await this.token.approve(this.stake.address, ether(100), {from: userOne})
+      await this.token.approve(this.stake.address, ether(200), {from: _})
+      await this.stake.addReserve(ether(200), {from: _})
+      await this.stake.deposit(ether(100), duration.days(89), {from: userOne}).should.be.rejectedWith(EVMRevert)
+    })
+
     it('User can not do double deposit', async function() {
       await this.token.approve(this.stake.address, ether(200), {from: userOne})
       await this.token.approve(this.stake.address, ether(400), {from: _})

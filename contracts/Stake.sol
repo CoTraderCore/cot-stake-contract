@@ -20,6 +20,8 @@ uint256 public debt = 0;
 uint256 public payout = 0;
 // total tokens reserve
 uint256 public reserve = 0;
+// minimum require time for staking
+uint256 public minRequireTime = 90 days;
 
 // COT token
 ERC20 public token;
@@ -59,6 +61,8 @@ function deposit(uint256 value, uint256 time) public{
  userDataStruct storage user = userDataMap[msg.sender];
  // throw if user not close previous deposit
  require(!user.depositStatus);
+ // throw if user time does not match the minimum time
+ require(time >= minRequireTime);
 
  uint256 increaseDebt = debt.add(calculateWithdarw(value, time));
  // throw if the contract cannot pay for user value
