@@ -213,6 +213,18 @@ contract('Stake', function([_, userOne, userTwo]) {
       assert.equal(fromWei(String(reserve)), 200)
     })
 
+    it('Owner can back all reserve if no any deposit', async function() {
+      await this.token.approve(this.stake.address, ether(400), {from: _})
+      await this.stake.addReserve(ether(400), {from: _})
+      const reserved = await this.stake.reserve()
+      assert.equal(fromWei(String(reserved)), 400)
+
+      await this.stake.removeReserve({from: _}).should.be.fulfilled
+      const reserve = await this.stake.reserve()
+      // owner can remove 300 tokens and 200 stay in reserve
+      assert.equal(fromWei(String(reserve)), 0)
+    })
+
     it('Owner can NOT get back reserve if all reserve in debt', async function() {
       await this.token.approve(this.stake.address, ether(200), {from: _})
       await this.stake.addReserve(ether(200), {from: _})
