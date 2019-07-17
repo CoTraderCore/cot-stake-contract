@@ -64,7 +64,7 @@ function deposit(uint256 value, uint256 time) public{
  // throw if user time does not match the minimum time
  require(time >= minRequireTime);
 
- // calculate new debt and reserve with new value 
+ // calculate new debt and reserve with new value
  uint256 increaseDebt = debt.add(calculateWithdarw(value, time));
  uint256 increaseReserve = reserve.add(value);
 
